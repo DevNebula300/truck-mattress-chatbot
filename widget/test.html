@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find Your Fit – Estee Bedding</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Hero section ────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      background:
+        linear-gradient(rgba(0,0,0,0.30), rgba(0,0,0,0.30)),
+        url('https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=1600&q=80') center / cover no-repeat;
+      background-color: #b0b0b0;
+      display: flex;
+      align-items: center;
+      padding: 48px 64px;
+    }
+
+    .hero-inner {
+      display: flex;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      align-items: center;
+      gap: 64px;
+    }
+
+    /* ── Left column ─────────────────────────────────────── */
+    .hero-left {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .hero-title {
+      font-size: clamp(2.8rem, 5vw, 4.5rem);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.05;
+      margin-bottom: 2rem;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.35);
+    }
+
+    .truck-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 2rem;
+    }
+
+    .truck-btn {
+      padding: 9px 22px;
+      background: transparent;
+      border: 2px solid #fff;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.18s;
+    }
+
+    .truck-btn:hover,
+    .truck-btn.active {
+      background: rgba(255,255,255,0.18);
+    }
+
+    .custom-size-btn {
+      display: block;
+      width: fit-content;
+      padding: 13px 32px;
+      background: #1e3a6e;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+      transition: background 0.18s;
+    }
+
+    .custom-size-btn:hover { background: #16304d; }
+
+    .size-finder {
+      color: rgba(255,255,255,0.85);
+      font-size: 0.92rem;
+    }
+
+    .size-finder strong {
+      color: #fff;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    /* ── Right column – inline chat box ─────────────────── */
+    .chat-box {
+      width: 380px;
+      flex-shrink: 0;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.20);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-messages {
+      padding: 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #f0f0f2;
+      min-height: 260px;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+
+    .msg {
+      max-width: 88%;
+      padding: 11px 15px;
+      border-radius: 14px;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+
+    .msg.assistant {
+      align-self: flex-start;
+      background: #e2e2e5;
+      color: #1d1d1d;
+    }
+
+    .msg.user {
+      align-self: flex-end;
+      background: #1e3a6e;
+      color: #fff;
+      text-align: center;
+    }
+
+    .msg.thinking {
+      font-style: italic;
+      color: #777;
+    }
+
+    /* ── Chat input row ──────────────────────────────────── */
+    .chat-input-area {
+      padding: 14px 14px 16px;
+      background: #fff;
+      border-top: 1px solid #e4e4e4;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .chat-input {
+      flex: 1;
+      resize: none;
+      border: 1px solid #d4d4d4;
+      border-radius: 10px;
+      padding: 10px 13px;
+      font: inherit;
+      font-size: 0.87rem;
+      color: #aaa;
+      min-height: 50px;
+      max-height: 120px;
+      line-height: 1.4;
+    }
+
+    .chat-input::placeholder { color: #aaa; }
+    .chat-input:focus {
+      outline: none;
+      border-color: #1e3a6e;
+      color: #1d1d1d;
+    }
+
+    .chat-send-btn {
+      padding: 11px 18px;
+      background: #1e3a6e;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      transition: background 0.18s;
+    }
+
+    .chat-send-btn:hover { background: #16304d; }
+    .chat-send-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 860px) {
+      .hero { padding: 40px 24px; }
+      .hero-inner { flex-direction: column; gap: 36px; }
+      .chat-box { width: 100%; }
+      .hero-title { font-size: 2.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <div class="hero-inner">
+
+      <!-- Left: heading + truck picker -->
+      <div class="hero-left">
+        <h1 class="hero-title">Find Your Fit</h1>
+
+        <div class="truck-buttons">
+          <button class="truck-btn" data-truck="Freightliner">Freightliner</button>
+          <button class="truck-btn" data-truck="Peterbilt">Peterbilt</button>
+          <button class="truck-btn" data-truck="Kenworth">Kenworth</button>
+          <button class="truck-btn" data-truck="Mack">Mack</button>
+          <button class="truck-btn" data-truck="Volvo">Volvo</button>
+          <button class="truck-btn" data-truck="International">International</button>
+        </div>
+
+        <button class="custom-size-btn" id="custom-size-btn">Custom Size</button>
+
+        <p class="size-finder">Need help? <strong id="size-finder-link">Use Our Size Finder</strong></p>
+      </div>
+
+      <!-- Right: inline chat -->
+      <div class="chat-box">
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+          <textarea
+            class="chat-input"
+            id="chat-input"
+            rows="2"
+            placeholder="Ask our expert AI anything&#10;(about mattresses, or a trucker joke ;) )"
+          ></textarea>
+          <button class="chat-send-btn" id="chat-send">Ask..</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      // Locally use port 8000; on any deployed host use the same origin
+      var apiBase = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+        ? "http://localhost:8000"
+        : window.location.origin;
+      var messagesEl = document.getElementById("chat-messages");
+      var inputEl    = document.getElementById("chat-input");
+      var sendBtn    = document.getElementById("chat-send");
+
+      function escapeHtml(s) {
+        var d = document.createElement("div");
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      function renderMarkdown(text) {
+        if (!text) return "";
+        var s = escapeHtml(text);
+        s = s.replace(/^### (.+)$/gm, "<div style='font-weight:700;font-size:0.88rem;color:#1e3a6e;margin:6px 0 2px'>$1</div>");
+        s = s.replace(/^## (.+)$/gm,  "<div style='font-weight:700;font-size:0.92rem;color:#1e3a6e;margin:6px 0 2px'>$1</div>");
+        s = s.replace(/^# (.+)$/gm,   "<div style='font-weight:700;font-size:0.96rem;color:#1e3a6e;margin:6px 0 2px'>$1</div>");
+        s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        s = s.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+        s = s.replace(/\n/g, "<br>");
+        return s;
+      }
+
+      function addMessage(role, content, extraClass) {
+        var div = document.createElement("div");
+        div.className = "msg " + role + (extraClass ? " " + extraClass : "");
+        if (role === "assistant" && !extraClass) {
+          div.innerHTML = renderMarkdown(content);
+          div.setAttribute("data-raw-content", content);
+        } else {
+          div.textContent = content;
+        }
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+        return div;
+      }
+
+      addMessage("assistant", "Hello! I can help you find the perfect Estee Bedding mattress. What are you looking for?");
+
+      document.querySelectorAll(".truck-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var truck = btn.getAttribute("data-truck");
+          inputEl.value = "I drive a " + truck + ". What mattress fits best?";
+          inputEl.focus();
+        });
+      });
+
+      document.getElementById("custom-size-btn").addEventListener("click", function () {
+        inputEl.value = "I need a custom size mattress. Can you help?";
+        inputEl.focus();
+      });
+
+      document.getElementById("size-finder-link").addEventListener("click", function () {
+        inputEl.value = "Can you help me find the right mattress size for my truck?";
+        inputEl.focus();
+      });
+
+      function send() {
+        var text = inputEl.value.trim();
+        if (!text) return;
+        inputEl.value = "";
+        addMessage("user", text);
+        var thinking = addMessage("assistant", "Thinking…", "thinking");
+        sendBtn.disabled = true;
+
+        var history = [];
+        var nodes = messagesEl.querySelectorAll(".msg:not(.thinking)");
+        for (var i = 0; i < nodes.length - 1; i++) {
+          var node = nodes[i];
+          var raw = node.getAttribute("data-raw-content");
+          history.push({
+            role: node.classList.contains("user") ? "user" : "assistant",
+            content: raw != null ? raw : node.textContent
+          });
+        }
+
+        fetch(apiBase.replace(/\/$/, "") + "/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text, history: history })
+        })
+          .then(function (r) {
+            if (!r.ok) return r.json().then(function (d) { throw new Error(d.detail || r.statusText); });
+            return r.json();
+          })
+          .then(function (data) {
+            thinking.remove();
+            addMessage("assistant", data.reply || "");
+          })
+          .catch(function (err) {
+            thinking.remove();
+            addMessage("assistant", "Sorry, something went wrong: " + (err.message || "Please try again."));
+          })
+          .finally(function () {
+            sendBtn.disabled = false;
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+          });
+      }
+
+      sendBtn.onclick = send;
+      inputEl.onkeydown = function (e) {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+      };
+    })();
+  </script>
+</body>
+</html>
