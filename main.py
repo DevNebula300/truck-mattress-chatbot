@@ -55,6 +55,12 @@ class ChatResponse(BaseModel):
     reply: str
 
 
+@app.get("/")
+def root():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/widget/test.html", status_code=302)
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
