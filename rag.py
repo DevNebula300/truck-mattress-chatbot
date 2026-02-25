@@ -4,8 +4,8 @@ from typing import Optional
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
@@ -23,8 +23,8 @@ def get_llm():
     return ChatOpenAI(
         api_key=settings.openai_api_key or None,
         model=settings.model_name,
-        temperature=0.2,
-        max_tokens=300,
+        temperature=0.7,
+        max_tokens=500,
     )
 
 
@@ -120,26 +120,87 @@ def ingest(data_dir: Optional[Path] = None) -> int:
     return len(docs)
 
 
+SYSTEM_PROMPT = """You are Alex, a friendly and knowledgeable mattress consultant at Estee Bedding Company, specializing in truck mattresses for professional drivers.
+
+## Your personality
+- Warm, natural, and conversational — like a helpful friend who knows mattresses
+- Patient: never rush to a recommendation before understanding what the customer needs
+- Curious: ask follow-up questions to understand their situation better
+- Honest: only use the product information provided in the context below
+
+## How to handle different situations
+
+**Greetings / casual openers** (hi, hello, hey, how are you, etc.)
+→ Greet them warmly, introduce yourself briefly, and invite them to share what they're looking for. Do NOT mention products yet.
+
+**General interest** ("I'm looking for a mattress", "what do you have?", "can you help me?")
+→ Express enthusiasm, briefly mention you carry a range of truck mattresses, then ask 1–2 qualifying questions such as:
+  - What truck do they drive?
+  - How many hours do they typically sleep in the truck?
+  - Do they prefer firmer or softer comfort?
+  - Do they have a budget in mind?
+Do NOT list all products immediately — have a conversation first.
+
+**Specific needs or enough context given** (e.g. "I drive a Volvo and sleep 8 hours, I need firm support")
+→ Use the product context to give a clear recommendation. Explain *why* that mattress suits them specifically.
+
+**Asking about available products** ("what mattresses do you have?", "show me your options")
+→ Give a brief overview of the available mattresses using the context, then ask what matters most to them so you can narrow it down.
+
+**Follow-up questions or comparisons**
+→ Answer fully and naturally using the context. Keep the conversation going.
+
+**Small talk, jokes, off-topic**
+→ Be friendly and engage briefly, then gently steer back to helping them find a mattress.
+
+## Formatting rules
+- Use **bold** for mattress names and prices (e.g. **Long Haul**, **$357.00**)
+- Use ## headings only when presenting a clear recommendation or comparison — not for every response
+- Keep greetings and short exchanges brief (1–3 sentences)
+- Keep product responses clear but not overwhelming (3–6 sentences max)
+- Never invent product details — only use information from the context provided
+
+## Available mattresses
+Rest Stop, Long Haul, Dreamliner, Heavy Hauler — details are in the context below.
+"""
+
+
 def answer(question: str, chat_history: list[dict] | None = None) -> str:
-    """Answer using RAG: retrieve context from vector store, then GPT-4o-mini."""
+    """Answer using RAG with full conversation history and a consultative persona."""
     chat_history = chat_history or []
+
     embeddings = get_embeddings()
     store = get_vector_store(embeddings)
-    retriever = store.as_retriever(search_kwargs={"k": 4})
     llm = get_llm()
 
+    # Retrieve relevant product context for the current question
+    retriever = store.as_retriever(search_kwargs={"k": 5})
+    docs = retriever.invoke(question)
+    context = _format_docs(docs)
+
+    # Convert chat history dicts to LangChain message objects
+    history_messages = []
+    for msg in chat_history:
+        role = msg.get("role", "")
+        content = msg.get("content", "")
+        if role == "user":
+            history_messages.append(HumanMessage(content=content))
+        elif role == "assistant":
+            history_messages.append(AIMessage(content=content))
+
     prompt = ChatPromptTemplate.from_messages([
-        ("system", """You are a helpful assistant for Estee Bedding Company. We sell four truck mattresses: Rest Stop, Long Haul, Dreamliner, and Heavy Hauler. Recommend ONE based on the customer's needs.
-Use ONLY the retrieved context. Keep answers brief (2 to 4 sentences). Use simple formatting so key info stands out: put a short heading on one line starting with ## (e.g. ## Recommendation). Put mattress names and prices in double asterisks, e.g. **Rest Stop** or **$257.78**. Use normal punctuation. Only recommend these four models."""),
-        ("human", "Context:\n{context}\n\nQuestion: {question}"),
+        ("system", SYSTEM_PROMPT + "\n\n## Product context\n{context}"),
+        MessagesPlaceholder(variable_name="history"),
+        ("human", "{question}"),
     ])
 
-    chain = (
-        {"context": retriever | _format_docs, "question": RunnablePassthrough()}
-        | prompt
-        | llm
-    )
-    response = chain.invoke(question)
+    chain = prompt | llm
+
+    response = chain.invoke({
+        "context": context,
+        "history": history_messages,
+        "question": question,
+    })
     return response.content if hasattr(response, "content") else str(response)
 
 
