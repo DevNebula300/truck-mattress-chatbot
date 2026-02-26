@@ -25,6 +25,7 @@ cp .env.example .env
 Edit `.env` and set:
 
 - **`OPENAI_API_KEY`** – Your OpenAI API key (required for chat and embeddings).
+- **`API_KEY`** – (Optional) If set, callers must send this value in the `X-API-Key` header when calling `/chat` (and `/ingest`). Use a long random string and share it only with trusted frontends. Leave empty to allow unauthenticated requests.
 - **`ALLOWED_ORIGINS`** – Your website origin(s), comma-separated (e.g. `https://your-site.com`), so the widget can call the API.
 
 ### 2. Install and run API
@@ -73,6 +74,10 @@ Open `widget/index.html` in a browser (or serve it). Ensure `data-api-base` in t
 
 - `data-api-base` – Base URL of this API (no trailing slash).
 - `data-widget-title` – Title shown in the chat header.
+
+### Frontend integration (custom app)
+
+If a separate frontend app will call this API, give the developer the base URL and (if you use one) the API key. Full details: **`FRONTEND-API.md`** — endpoint, request/response format, and a small code example.
 
 ## Project layout
 

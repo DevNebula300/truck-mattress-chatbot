@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     openai_api_key: str = ""
+    api_key: str = ""  # Optional: if set, frontend must send this in X-API-Key header to call /chat
     allowed_origins: str = "*"
     chroma_persist_dir: Path = Path("./chroma_db")
     port: int = 8000

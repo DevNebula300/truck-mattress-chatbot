@@ -336,9 +336,11 @@
           });
         }
 
+        var headers = { "Content-Type": "application/json" };
+        if (window.MATTRESS_CHAT_API_KEY) headers["X-API-Key"] = window.MATTRESS_CHAT_API_KEY;
         fetch(apiBase.replace(/\/$/, "") + "/chat", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: headers,
           body: JSON.stringify({ message: text, history: history })
         })
           .then(function (r) {

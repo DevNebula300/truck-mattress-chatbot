@@ -4,13 +4,21 @@ import shutil
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from config import settings
 from rag import answer, ingest
+
+
+def require_api_key(x_api_key: str | None = Header(None, alias="X-API-Key")):
+    """If API_KEY is set in env, require it in the X-API-Key header. Otherwise allow all."""
+    if not settings.api_key:
+        return
+    if not x_api_key or x_api_key.strip() != settings.api_key.strip():
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
 
 @asynccontextmanager
@@ -67,7 +75,7 @@ def health():
 
 
 @app.post("/chat", response_model=ChatResponse)
-def chat(req: ChatRequest):
+def chat(req: ChatRequest, _: None = Depends(require_api_key)):
     if not settings.openai_api_key:
         raise HTTPException(status_code=503, detail="OpenAI API key not configured. Set OPENAI_API_KEY.")
     if not req.message.strip():
@@ -86,7 +94,7 @@ def test_page_redirect():
 
 
 @app.post("/ingest")
-def run_ingest():
+def run_ingest(_: None = Depends(require_api_key)):
     """Re-load and index all data from the data/ folder. Call this after adding/updating catalog, trucks, FAQs."""
     data_dir = Path(__file__).parent / "data"
     try:
