@@ -4,7 +4,7 @@ import shutil
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -13,12 +13,27 @@ from config import settings
 from rag import answer, ingest
 
 
-def require_api_key(x_api_key: str | None = Header(None, alias="X-API-Key")):
-    """If API_KEY is set in env, require it in the X-API-Key header. Otherwise allow all."""
+def _is_same_origin_request(request: Request) -> bool:
+    """True if the request is from our own origin (e.g. widget on same deployment)."""
+    origin = request.headers.get("origin") or request.headers.get("referer") or ""
+    # Strip to scheme + host (ignore path)
+    origin_host = origin.split("/", 3)[2].lower() if "/" in origin else ""
+    forwarded_host = request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
+    if not forwarded_host:
+        return False
+    request_host = forwarded_host.split(",")[0].strip().lower()
+    return bool(origin_host and request_host and origin_host == request_host)
+
+
+def require_api_key(request: Request, x_api_key: str | None = Header(None, alias="X-API-Key")):
+    """If API_KEY is set in env, require it in the X-API-Key header. Same-origin requests (e.g. our widget) are allowed without a key."""
     if not settings.api_key:
         return
-    if not x_api_key or x_api_key.strip() != settings.api_key.strip():
-        raise HTTPException(status_code=401, detail="Invalid or missing API key")
+    if x_api_key and x_api_key.strip() == settings.api_key.strip():
+        return
+    if _is_same_origin_request(request):
+        return
+    raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
 
 @asynccontextmanager
