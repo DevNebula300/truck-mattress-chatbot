@@ -11,7 +11,7 @@ Add truck makes, models, sleeper dimensions, and fit notes. Supported formats: *
 | sleeper_type | e.g. Cab-over, conventional, flat top |
 | sleeper_length_in | Sleeper length in inches |
 | sleeper_width_in | Sleeper width in inches |
-| mattress_size_fits | e.g. Short Queen, Twin XL, Custom |
+| mattress_size_fits | Dimensions we sell (e.g. 36 x 79, 42 x 80) or note like "fits short-queen bunks (use 36 x 79)" — we recommend dimensions for customer-facing answers |
 | fit_notes | Any special fit or installation notes |
 
 You can add more columns; all will be searchable.
